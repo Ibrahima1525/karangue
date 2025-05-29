@@ -11,7 +11,8 @@ import {
   StyleSheet,
   Modal,
   ActivityIndicator,
-  Image, // ✅ Ajout pour le logo
+  Image,
+  Dimensions,
 } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
@@ -20,6 +21,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Animatable from "react-native-animatable";
 import { db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
+
+// Obtenir la largeur de l’écran
+const screenWidth = Dimensions.get("window").width;
 
 export default function RegisterScreen({ navigation }) {
   const [prenom, setPrenom] = useState("");
@@ -89,13 +93,13 @@ export default function RegisterScreen({ navigation }) {
           style={styles.container}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          {/* ✅ Logo ajouté ici */}
-          <Animatable.View animation="fadeInDown" style={styles.logoContainer}>
+          {/* Ajout du logo */}
+          <View style={{ alignItems: "center", marginBottom: 30 }}>
             <Image
               source={require("../assets/vigilance.png")}
               style={styles.logo}
             />
-          </Animatable.View>
+          </View>
 
           <Animatable.Text animation="fadeInDown" style={styles.title}>
             Créer un compte
@@ -210,19 +214,28 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  safeArea: { flex: 1 },
-  container: { flex: 1, justifyContent: "center", paddingHorizontal: 24 },
-
-  logoContainer: { alignItems: "center", marginBottom: 10 }, // ✅
-  logo: { width: 200, height: 80, resizeMode: "contain" }, // ✅
-
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  logo: {
+    width: screenWidth * 0.5,
+    height: screenWidth * 0.5 * 0.4,
+    resizeMode: "contain",
+  },
   title: {
     fontSize: 32,
     fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
-    marginBottom: 40,
+    marginBottom: 20,
   },
   form: {
     backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -251,9 +264,16 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     alignItems: "center",
   },
-  genreButtonSelected: { backgroundColor: "#fff" },
-  genreText: { color: "#ccc" },
-  genreTextSelected: { color: "#3b5998", fontWeight: "bold" },
+  genreButtonSelected: {
+    backgroundColor: "#fff",
+  },
+  genreText: {
+    color: "#ccc",
+  },
+  genreTextSelected: {
+    color: "#3b5998",
+    fontWeight: "bold",
+  },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -262,7 +282,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
   },
-  passwordInput: { flex: 1, height: 50, color: "#fff" },
+  passwordInput: {
+    flex: 1,
+    height: 50,
+    color: "#fff",
+  },
   button: {
     backgroundColor: "#fff",
     paddingVertical: 14,
@@ -270,8 +294,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  buttonText: { color: "#3b5998", fontWeight: "bold", fontSize: 16 },
-  backText: { textAlign: "center", color: "#fff" },
+  buttonText: {
+    color: "#3b5998",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  backText: {
+    textAlign: "center",
+    color: "#fff",
+  },
   link: {
     textDecorationLine: "underline",
     fontWeight: "bold",
@@ -283,5 +314,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  loadingText: { marginTop: 12, color: "#fff", fontSize: 18 },
+  loadingText: {
+    marginTop: 12,
+    color: "#fff",
+    fontSize: 18,
+  },
 });

@@ -11,12 +11,16 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Modal,
-  Image, // 👈 ajouté
+  Image,
+  Dimensions, // 👈 Ajouté
 } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Animatable from "react-native-animatable";
+
+// Obtenir la largeur de l’écran
+const screenWidth = Dimensions.get("window").width;
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -44,10 +48,9 @@ export default function LoginScreen({ navigation }) {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
         >
-          {/* 👇 Logo ajouté ici */}
           <Animatable.View animation="fadeInDown" style={styles.logoContainer}>
             <Image
-              source={require("../assets/vigilance.png")} // Assure-toi du bon chemin
+              source={require("../assets/vigilance.png")}
               style={styles.logo}
             />
           </Animatable.View>
@@ -93,7 +96,6 @@ export default function LoginScreen({ navigation }) {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* Overlay de chargement */}
       <Modal transparent={true} visible={loading}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#fff" />
@@ -121,8 +123,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   logo: {
-    width: 200,
-    height: 80,
+    width: screenWidth * 0.5,
+    height: screenWidth * 0.5 * 0.4,
     resizeMode: "contain",
   },
   title: {

@@ -15,8 +15,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColorScheme } from "react-native";
 import { signOut } from "firebase/auth";
-import { auth, db } from "../firebase"; // <-- db importé ici
-import { collection, addDoc } from "firebase/firestore"; // <-- firestore
+import { auth, db } from "../firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 const incidentTypes = [
   { label: "Harcèlement", value: "harcelement", color: "#FF9F43", icon: "🗣️" },
@@ -49,6 +49,7 @@ const HomeScreen = ({ navigation }) => {
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(false);
   const colorScheme = useColorScheme();
   const styles = createStyles(colorScheme === "dark");
 
@@ -149,9 +150,32 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
+  const sendNotificationToOthers = async (typeIncident) => {
+    const currentUser = auth.currentUser;
+    try {
+      await addDoc(collection(db, "notifications"), {
+        idUtilisateur: currentUser.uid,
+        message: `Un incident de type '${typeIncident}' a été signalé.`,
+        date: Timestamp.now(),
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création de la notification :", error);
+    }
+  };
+
   const handleSubmit = async () => {
+    if (loading) return;
+    setLoading(true);
+
     if (!description.trim()) {
       Alert.alert("Erreur", "Veuillez entrer une description.");
+      setLoading(false);
+      return;
+    }
+
+    if (!location) {
+      Alert.alert("Erreur", "Localisation non disponible.");
+      setLoading(false);
       return;
     }
 
@@ -162,22 +186,20 @@ const HomeScreen = ({ navigation }) => {
       description,
       image,
       location,
-      date: new Date().toLocaleString(),
+      date: new Date().toISOString(),
     };
 
     try {
-      // 1. Stockage local
       const existing = await AsyncStorage.getItem("reports");
       const reports = existing ? JSON.parse(existing) : [];
       reports.unshift(newReport);
       await AsyncStorage.setItem("reports", JSON.stringify(reports));
 
-      // 2. 🔥 Stockage Firestore
       await addDoc(collection(db, "incidents"), newReport);
+      await sendNotificationToOthers(selectedType);
 
       Alert.alert("Signalement envoyé", "Merci pour votre contribution.");
 
-      // Reset
       setSelectedType("vol");
       setSelectedService("police");
       setDescription("");
@@ -185,6 +207,8 @@ const HomeScreen = ({ navigation }) => {
     } catch (e) {
       Alert.alert("Erreur", "Impossible d'enregistrer le signalement.");
       console.log(e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -258,6 +282,21 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </View>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("Notifications")}
+        style={{
+          marginTop: 15,
+          alignSelf: "center",
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          backgroundColor: "#00b894",
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: "#fff", fontWeight: "bold" }}>
+          🔔 Voir les notifications
+        </Text>
+      </TouchableOpacity>
 
       <TextInput
         style={styles.input}
@@ -291,34 +330,13 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       )}
 
-      {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
-
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitText}>ENVOYER</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity
-        onPress={async () => {
-          try {
-            await signOut(auth);
-            Alert.alert("Déconnecté", "Vous avez été déconnecté.");
-            navigation.replace("Login");
-          } catch (error) {
-            Alert.alert("Erreur", "Impossible de se déconnecter.");
-            console.log(error);
-          }
-        }}
-        style={{
-          marginTop: 15,
-          alignSelf: "center",
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          backgroundColor: "#d63031",
-          borderRadius: 8,
-        }}
+        style={[styles.submitButton, loading && { opacity: 0.6 }]}
+        onPress={handleSubmit}
+        disabled={loading}
       >
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>
-          Se déconnecter
+        <Text style={styles.submitText}>
+          {loading ? "Envoi en cours..." : "ENVOYER"}
         </Text>
       </TouchableOpacity>
     </KeyboardAwareScrollView>
